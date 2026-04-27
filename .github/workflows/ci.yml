@@ -9,13 +9,16 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
+  GO_VERSION: "1.22"
   PYTHONPATH: ${{ github.workspace }}
   LOCAL_IMAGE: rps-api:ci
   DOCKERHUB_REPOSITORY: rps-cloud-native
+  GO_API_REPOSITORY: rps-cloud-native-go-api
+  BACKUP_REPOSITORY: rps-cloud-native-postgres-backup
 
 jobs:
   compile:
-    name: Compile Python
+    name: Compile
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +38,16 @@ jobs:
 
       - name: Compile source and tests
         run: python -m compileall app tests
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go-api/go.sum
+
+      - name: Compile Go API
+        working-directory: go-api
+        run: go build ./...
 
   unit-tests:
     name: Unit tests
@@ -59,8 +72,18 @@ jobs:
       - name: Run unit tests
         run: python -m pytest
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go-api/go.sum
+
+      - name: Run Go unit tests
+        working-directory: go-api
+        run: go test ./...
+
   container-build:
-    name: Build container
+    name: Build containers
     runs-on: ubuntu-latest
     needs: unit-tests
 
@@ -71,12 +94,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Build Python API image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: false
           tags: ${{ env.LOCAL_IMAGE }}
+
+      - name: Build Go API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: go-api/Dockerfile
+          push: false
+          tags: players-api:ci
+
+      - name: Build PostgreSQL backup image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backup/Dockerfile
+          push: false
+          tags: postgres-backup:ci
 
   dockerhub-push:
     name: Push to Docker Hub
@@ -97,7 +136,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push Python API image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -105,3 +144,23 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
+
+      - name: Build and push Go API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: go-api/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GO_API_REPOSITORY }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GO_API_REPOSITORY }}:${{ github.sha }}
+
+      - name: Build and push PostgreSQL backup image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backup/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.BACKUP_REPOSITORY }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.BACKUP_REPOSITORY }}:${{ github.sha }}

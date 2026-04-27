@@ -93,6 +93,29 @@
             transform: translateY(-1px);
         }
 
+        input, select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font: inherit;
+            color: var(--ink);
+            background: rgba(255, 255, 255, 0.78);
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
         .result {
             margin-top: 18px;
             padding: 16px;
@@ -149,6 +172,12 @@
             color: var(--accent-2);
             font-size: 0.85rem;
             font-weight: 700;
+        }
+
+        .status {
+            margin-top: 14px;
+            color: var(--muted);
+            min-height: 24px;
         }
 
         @media (max-width: 720px) {
@@ -208,9 +237,42 @@
                 <li>No history yet.</li>
             </ul>
         </section>
+
+        <section class="card">
+            <span class="tag">Go + PostgreSQL</span>
+            <h2>Players API</h2>
+            <p>Create and list player profiles through the second CRUD service.</p>
+
+            <div class="form-grid">
+                <label>
+                    Player Name
+                    <input id="player-name" placeholder="Ada Lovelace" maxlength="80">
+                </label>
+                <label>
+                    Favorite Move
+                    <select id="favorite-move">
+                        <option value="rock">Rock</option>
+                        <option value="paper">Paper</option>
+                        <option value="scissors">Scissors</option>
+                    </select>
+                </label>
+                <label>
+                    Rating
+                    <input id="player-rating" type="number" min="0" max="3000" value="1000">
+                </label>
+                <button class="secondary" onclick="createPlayer()">Save Player</button>
+            </div>
+
+            <p class="status" id="players-status"></p>
+            <ul id="players">
+                <li>No players yet.</li>
+            </ul>
+        </section>
     </main>
 
     <script>
+        const playersApiBase = window.localStorage.getItem("playersApiBase") || "http://localhost:8080";
+
         async function play(choice) {
             const response = await fetch("/api/games", {
                 method: "POST",
@@ -271,7 +333,82 @@
             return map[outcome] || outcome;
         }
 
+        async function createPlayer() {
+            const payload = {
+                name: document.getElementById("player-name").value,
+                favorite_move: document.getElementById("favorite-move").value,
+                rating: Number(document.getElementById("player-rating").value)
+            };
+
+            const status = document.getElementById("players-status");
+            try {
+                const response = await fetch(`${playersApiBase}/api/players`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || "Could not save player");
+                }
+
+                document.getElementById("player-name").value = "";
+                status.textContent = "Player saved.";
+                await loadPlayers();
+            } catch (error) {
+                status.textContent = `Players API unavailable: ${error.message}`;
+            }
+        }
+
+        async function deletePlayer(id) {
+            const status = document.getElementById("players-status");
+            try {
+                const response = await fetch(`${playersApiBase}/api/players/${id}`, {
+                    method: "DELETE"
+                });
+                if (!response.ok) {
+                    throw new Error("Could not delete player");
+                }
+                status.textContent = "Player deleted.";
+                await loadPlayers();
+            } catch (error) {
+                status.textContent = `Players API unavailable: ${error.message}`;
+            }
+        }
+
+        async function loadPlayers() {
+            const status = document.getElementById("players-status");
+            const playersList = document.getElementById("players");
+
+            try {
+                const response = await fetch(`${playersApiBase}/api/players`);
+                if (!response.ok) {
+                    throw new Error("Could not load players");
+                }
+                const players = await response.json();
+
+                if (!players.length) {
+                    playersList.innerHTML = "<li>No players yet.</li>";
+                    status.textContent = `Players API: ${playersApiBase}`;
+                    return;
+                }
+
+                playersList.innerHTML = players.map((player) => `
+                    <li>
+                        <span>${player.name} | ${player.favorite_move} | ${player.rating}</span>
+                        <button class="primary" onclick="deletePlayer(${player.id})">Delete</button>
+                    </li>
+                `).join("");
+                status.textContent = `Players API: ${playersApiBase}`;
+            } catch (error) {
+                playersList.innerHTML = "<li>Start the Players API port-forward on port 8080.</li>";
+                status.textContent = `Players API unavailable: ${error.message}`;
+            }
+        }
+
         loadDashboard();
+        loadPlayers();
     </script>
 </body>
 </html>
