@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sten, Sax, Pase</title>
+    <style>
+        :root {
+            --bg: #f6efe3;
+            --panel: rgba(255, 255, 255, 0.82);
+            --ink: #1f2a37;
+            --muted: #64748b;
+            --accent: #cf5c36;
+            --accent-2: #188977;
+            --line: rgba(31, 42, 55, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(207, 92, 54, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(24, 137, 119, 0.18), transparent 25%),
+                linear-gradient(180deg, #f8f4ee 0%, var(--bg) 100%);
+            padding: 24px;
+        }
+
+        .layout {
+            max-width: 1080px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 22px 55px rgba(31, 42, 55, 0.08);
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            line-height: 0.95;
+            margin-bottom: 12px;
+        }
+
+        p {
+            margin: 0 0 16px;
+            color: var(--muted);
+        }
+
+        .choices {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        button.secondary {
+            background: var(--accent-2);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .result {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid var(--line);
+            min-height: 78px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat {
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--line);
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 1.5rem;
+            color: var(--ink);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--line);
+            color: var(--muted);
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(24, 137, 119, 0.12);
+            color: var(--accent-2);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 16px;
+            }
+
+            .card {
+                border-radius: 18px;
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="layout">
+        <section class="card">
+            <span class="tag">Cloud Native Demo</span>
+            <h1>Sten, Sax, Pase</h1>
+            <p>Spela en omgang, spara resultatet i databasen och visa statistik direkt fran API:et.</p>
+
+            <div class="choices">
+                <button class="primary" onclick="play('rock')">Sten</button>
+                <button class="primary" onclick="play('paper')">Pase</button>
+                <button class="primary" onclick="play('scissors')">Sax</button>
+                <button class="secondary" onclick="loadDashboard()">Uppdatera statistik</button>
+            </div>
+
+            <div class="result" id="result">
+                Valt inte gjort an. Spela en omgang for att se resultatet har.
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <span>Totalt spelade</span>
+                    <strong id="total-games">0</strong>
+                </div>
+                <div class="stat">
+                    <span>Vinstprocent</span>
+                    <strong id="win-rate">0.0%</strong>
+                </div>
+                <div class="stat">
+                    <span>Vinster</span>
+                    <strong id="wins">0</strong>
+                </div>
+                <div class="stat">
+                    <span>Forluster</span>
+                    <strong id="losses">0</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Senaste spel</h2>
+            <p>Visar de senaste sparade omgangarna fran databasen.</p>
+            <ul id="history">
+                <li>Ingen historik an.</li>
+            </ul>
+        </section>
+    </main>
+
+    <script>
+        async function play(choice) {
+            const response = await fetch("/api/games", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ player_choice: choice })
+            });
+
+            const data = await response.json();
+            document.getElementById("result").textContent =
+                `Du valde ${translate(choice)}. Datorn valde ${translate(data.computer_choice)}. Resultat: ${translateOutcome(data.outcome)}.`;
+
+            await loadDashboard();
+        }
+
+        async function loadDashboard() {
+            const [statsResponse, gamesResponse] = await Promise.all([
+                fetch("/api/stats"),
+                fetch("/api/games")
+            ]);
+
+            const stats = await statsResponse.json();
+            const games = await gamesResponse.json();
+
+            document.getElementById("total-games").textContent = stats.total_games;
+            document.getElementById("win-rate").textContent = `${stats.win_rate}%`;
+            document.getElementById("wins").textContent = stats.wins;
+            document.getElementById("losses").textContent = stats.losses;
+
+            const history = document.getElementById("history");
+            if (!games.length) {
+                history.innerHTML = "<li>Ingen historik an.</li>";
+                return;
+            }
+
+            history.innerHTML = games.map((game) => `
+                <li>
+                    <span>Du: ${translate(game.player_choice)} | Dator: ${translate(game.computer_choice)}</span>
+                    <strong>${translateOutcome(game.outcome)}</strong>
+                </li>
+            `).join("");
+        }
+
+        function translate(choice) {
+            const map = {
+                rock: "sten",
+                paper: "pase",
+                scissors: "sax"
+            };
+            return map[choice] || choice;
+        }
+
+        function translateOutcome(outcome) {
+            const map = {
+                win: "vinst",
+                loss: "forlust",
+                draw: "oavgjort"
+            };
+            return map[outcome] || outcome;
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
+
