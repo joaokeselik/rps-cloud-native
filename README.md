@@ -1,32 +1,32 @@
 # Rock Paper Scissors API
 
-Detta projekt ar en enkel men komplett losning for G-kraven i uppgiften:
+This project is a small but complete solution for the course requirements:
 
-- webbtjanst i Python
-- databasdriven lagring av spelomgangar
-- enhetstester i CI
-- Docker-image som kan byggas och pushas till registry
-- Kubernetes-manifest for manuell deploy med `kubectl`
+- a Python web service
+- database-driven storage of game rounds
+- unit tests in CI
+- a Docker image that is built and pushed to a registry
+- Kubernetes manifests for manual deployment with `kubectl`
 
-Applikationen erbjuder ett litet API och en enkel webbsida dar anvandaren kan spela sten, sax, pase. Varje spelomgang sparas i databasen och statistik kan hamtas via API.
+The application provides a simple API and web page where users can play Rock, Paper, Scissors. Every game round is stored in the database, and statistics are available through the API.
 
-## Arkitektur
+## Architecture
 
-- `app/` innehaller FastAPI-applikationen
-- `tests/` innehaller enhetstester och API-tester
-- `.github/workflows/ci.yml` kor tester, bygger image och kan pusha till Docker Hub
-- `k8s/` innehaller manifest for namespace, MySQL och applikationen
-- `docs/rapport.md` ar en svensk rapportmall till inlamningen
+- `app/` contains the FastAPI application
+- `tests/` contains unit tests and API tests
+- `.github/workflows/ci.yml` runs tests, builds the image, and pushes it to Docker Hub
+- `k8s/` contains manifests for the namespace, MySQL, and the application
+- `docs/report.md` contains the project report template
 
-## API-endpoints
+## API Endpoints
 
-- `GET /` enkel webbsida for att spela i webblasaren
-- `POST /api/games` spelar en omgang och sparar resultatet
-- `GET /api/games` visar de senaste omgangarna
-- `GET /api/stats` visar total statistik
-- `GET /healthz` enkel health check for Kubernetes
+- `GET /` serves the web page
+- `POST /api/games` plays one round and stores the result
+- `GET /api/games` returns the latest rounds
+- `GET /api/stats` returns total statistics
+- `GET /healthz` provides a health check for Kubernetes
 
-Exempel for att spela via API:
+Example API request:
 
 ```bash
 curl -X POST http://localhost:8000/api/games \
@@ -34,7 +34,7 @@ curl -X POST http://localhost:8000/api/games \
   -d '{"player_choice":"rock"}'
 ```
 
-## Kora lokalt
+## Run Locally Without Kubernetes
 
 ```bash
 python -m venv .venv
@@ -43,44 +43,44 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Om du inte anger `DATABASE_URL` anvands lokal SQLite automatiskt. I Kubernetes anvands MySQL via secret.
+If `DATABASE_URL` is not set, the application uses local SQLite automatically. In Kubernetes, the application uses MySQL through a secret.
 
-## Kora tester
+## Run Tests
 
 ```bash
 pytest
 ```
 
-## CI i GitHub Actions
+## CI With GitHub Actions
 
-Workflowen gor fyra saker:
+The workflow does four things:
 
-1. Kompilerar Python-koden med `python -m compileall app tests`
-2. Kor unittester med `pytest`
-3. Bygger en Docker-image
-4. Pushar en ny Docker-image till Docker Hub vid `push` till `main` eller `master`
+1. Compiles the Python code with `python -m compileall app tests`
+2. Runs unit tests with `pytest`
+3. Builds a Docker image
+4. Pushes a new Docker image to Docker Hub on pushes to `main` or `master`
 
-For att Docker Hub-pushen ska aktiveras behover du lagga in foljande i GitHub:
+To enable the Docker Hub push, add these GitHub repository secrets:
 
-- repository secret `DOCKERHUB_USERNAME`
-- repository secret `DOCKERHUB_TOKEN`
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
 
-CI pushar imagen till:
+The CI workflow pushes the image to:
 
 ```text
 DOCKERHUB_USERNAME/rps-cloud-native:latest
 DOCKERHUB_USERNAME/rps-cloud-native:<commit-sha>
 ```
 
-## Kora i Kubernetes
+## Run in Kubernetes
 
-Manifesten i `k8s/` kan koras med Docker Desktop Kubernetes, minikube eller kind. Applikationen hamtas fran Docker Hub:
+The manifests in `k8s/` can be used with Docker Desktop Kubernetes, minikube, kind, or another Kubernetes cluster. The application image is pulled from Docker Hub:
 
 ```text
 keseljoa/rps-cloud-native:latest
 ```
 
-Se till att CI har hunnit pusha imagen till Docker Hub innan du deployar. Kor sedan:
+Make sure CI has pushed the image to Docker Hub before deploying. Then run:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
@@ -93,21 +93,21 @@ kubectl -n rps rollout status deployment/rps-api
 kubectl -n rps port-forward svc/rps-api 8000:8000
 ```
 
-Oppna sedan `http://localhost:8000`.
+Keep the `kubectl port-forward` command running while using the app. Then open `http://localhost:8000`.
 
-Om du bara vill testa en lokal image under utveckling kan du tillfalligt andra image-raden i `k8s/app.yaml` till `rps-api:latest` och bygga lokalt:
+If you only want to test a local image during development, temporarily change the image line in `k8s/app.yaml` to `rps-api:latest` and build locally:
 
 ```bash
 docker build -t rps-api:latest .
 ```
 
-For kind kan en lokal image laddas in i klustret efter bygg:
+For kind, load the local image into the cluster after building:
 
 ```bash
 kind load docker-image rps-api:latest
 ```
 
-Om Docker Desktop visar cluster type `kind` men kommandot `kind` inte finns i PowerShell kan du hoppa over `kind load` och fortsatta med `kubectl apply`. Kontrollera sedan att poddarna ar redo innan port-forward:
+If Docker Desktop shows cluster type `kind` but the `kind` command is not available in PowerShell, you can skip `kind load` and continue with `kubectl apply`. Check that the pods are ready before port-forwarding:
 
 ```bash
 kubectl -n rps get pods
@@ -115,7 +115,7 @@ kubectl -n rps rollout status deployment/mysql
 kubectl -n rps rollout status deployment/rps-api
 ```
 
-## Deploy-kommandon
+## Deployment Commands
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
@@ -125,19 +125,19 @@ kubectl apply -f k8s/mysql.yaml
 kubectl apply -f k8s/app.yaml
 ```
 
-Exponera tjansten lokalt for test:
+Expose the service locally for testing:
 
 ```bash
 kubectl -n rps port-forward svc/rps-api 8000:8000
 ```
 
-Oppna `http://localhost:8000`.
+Keep the terminal running `kubectl port-forward` open. Then open `http://localhost:8000`.
 
-## Inlamning
+## Submission
 
-For sjalva inlamningen behover du normalt:
+For submission, you normally need:
 
-- URL till ditt privata repo eller dina privata repos
-- rapporten i `docs/rapport.md`, uppdaterad med dina egna namn, bilder och repo-lankar
+- the URL to your GitHub repository
+- the project report in `docs/report.md`, updated with your own name, screenshots, and repository links
 
-Den har losningen ligger i ett repo, vilket racker for G-kraven. Om du vill dela upp frontend och API i flera repos senare gar det att bygga vidare fran samma grund.
+This solution uses one repository, which is enough for the requirements. It can be expanded later if you want to split the frontend and API into separate repositories.

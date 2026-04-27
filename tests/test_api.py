@@ -52,7 +52,7 @@ def test_index_page_renders():
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "Sten, Sax, Pase" in response.text
+    assert "Rock, Paper, Scissors" in response.text
 
 
 def test_stats_endpoint_returns_aggregated_values(monkeypatch):

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sten, Sax, Pase</title>
+    <title>Rock, Paper, Scissors</title>
     <style>
         :root {
             --bg: #f6efe3;
@@ -167,45 +167,45 @@
     <main class="layout">
         <section class="card">
             <span class="tag">Cloud Native</span>
-            <h1>Sten, Sax, Pase</h1>
-            <p>Spela en omgang, spara resultatet i databasen och visa statistik direkt fran API:et.</p>
+            <h1>Rock, Paper, Scissors</h1>
+            <p>Play a round, store the result in the database, and view statistics directly from the API.</p>
 
             <div class="choices">
-                <button class="primary" onclick="play('rock')">Sten</button>
-                <button class="primary" onclick="play('paper')">Pase</button>
-                <button class="primary" onclick="play('scissors')">Sax</button>
-                <button class="secondary" onclick="loadDashboard()">Uppdatera statistik</button>
+                <button class="primary" onclick="play('rock')">Rock</button>
+                <button class="primary" onclick="play('paper')">Paper</button>
+                <button class="primary" onclick="play('scissors')">Scissors</button>
+                <button class="secondary" onclick="loadDashboard()">Refresh Stats</button>
             </div>
 
             <div class="result" id="result">
-                Valt inte gjort an. Spela en omgang for att se resultatet har.
+                No choice made yet. Play a round to see the result here.
             </div>
 
             <div class="stats">
                 <div class="stat">
-                    <span>Totalt spelade</span>
+                    <span>Total Games</span>
                     <strong id="total-games">0</strong>
                 </div>
                 <div class="stat">
-                    <span>Vinstprocent</span>
+                    <span>Win Rate</span>
                     <strong id="win-rate">0.0%</strong>
                 </div>
                 <div class="stat">
-                    <span>Vinster</span>
+                    <span>Wins</span>
                     <strong id="wins">0</strong>
                 </div>
                 <div class="stat">
-                    <span>Forluster</span>
+                    <span>Losses</span>
                     <strong id="losses">0</strong>
                 </div>
             </div>
         </section>
 
         <section class="card">
-            <h2>Senaste spel</h2>
-            <p>Visar de senaste sparade omgangarna fran databasen.</p>
+            <h2>Latest Games</h2>
+            <p>Shows the latest saved rounds from the database.</p>
             <ul id="history">
-                <li>Ingen historik an.</li>
+                <li>No history yet.</li>
             </ul>
         </section>
     </main>
@@ -220,7 +220,7 @@
 
             const data = await response.json();
             document.getElementById("result").textContent =
-                `Du valde ${translate(choice)}. Datorn valde ${translate(data.computer_choice)}. Resultat: ${translateOutcome(data.outcome)}.`;
+                `You chose ${translate(choice)}. The computer chose ${translate(data.computer_choice)}. Result: ${translateOutcome(data.outcome)}.`;
 
             await loadDashboard();
         }
@@ -241,13 +241,13 @@
 
             const history = document.getElementById("history");
             if (!games.length) {
-                history.innerHTML = "<li>Ingen historik an.</li>";
+                history.innerHTML = "<li>No history yet.</li>";
                 return;
             }
 
             history.innerHTML = games.map((game) => `
                 <li>
-                    <span>Du: ${translate(game.player_choice)} | Dator: ${translate(game.computer_choice)}</span>
+                    <span>You: ${translate(game.player_choice)} | Computer: ${translate(game.computer_choice)}</span>
                     <strong>${translateOutcome(game.outcome)}</strong>
                 </li>
             `).join("");
@@ -255,18 +255,18 @@
 
         function translate(choice) {
             const map = {
-                rock: "sten",
-                paper: "pase",
-                scissors: "sax"
+                rock: "rock",
+                paper: "paper",
+                scissors: "scissors"
             };
             return map[choice] || choice;
         }
 
         function translateOutcome(outcome) {
             const map = {
-                win: "vinst",
-                loss: "forlust",
-                draw: "oavgjort"
+                win: "win",
+                loss: "loss",
+                draw: "draw"
             };
             return map[outcome] || outcome;
         }
