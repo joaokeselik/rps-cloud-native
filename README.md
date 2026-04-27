@@ -72,12 +72,17 @@ DOCKERHUB_USERNAME/rps-cloud-native:latest
 DOCKERHUB_USERNAME/rps-cloud-native:<commit-sha>
 ```
 
-## Kora i Kubernetes lokalt
+## Kora i Kubernetes
 
-Manifesten i `k8s/` kan koras lokalt med Docker Desktop Kubernetes, minikube eller kind. For Docker Desktop Kubernetes racker det att bygga imagen lokalt med samma namn som manifestet anvander:
+Manifesten i `k8s/` kan koras med Docker Desktop Kubernetes, minikube eller kind. Applikationen hamtas fran Docker Hub:
+
+```text
+keseljoa/rps-cloud-native:latest
+```
+
+Se till att CI har hunnit pusha imagen till Docker Hub innan du deployar. Kor sedan:
 
 ```bash
-docker build -t rps-api:latest .
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/mysql-secret.yaml
 kubectl apply -f k8s/mysql-pvc.yaml
@@ -90,14 +95,13 @@ kubectl -n rps port-forward svc/rps-api 8000:8000
 
 Oppna sedan `http://localhost:8000`.
 
-Om du anvander minikube kan du bygga imagen direkt i minikubes Docker-miljo:
+Om du bara vill testa en lokal image under utveckling kan du tillfalligt andra image-raden i `k8s/app.yaml` till `rps-api:latest` och bygga lokalt:
 
 ```bash
-minikube docker-env
 docker build -t rps-api:latest .
 ```
 
-Om du anvander kind laddar du in imagen i klustret efter bygg:
+For kind kan en lokal image laddas in i klustret efter bygg:
 
 ```bash
 kind load docker-image rps-api:latest
@@ -111,11 +115,7 @@ kubectl -n rps rollout status deployment/mysql
 kubectl -n rps rollout status deployment/rps-api
 ```
 
-## Deploy till Kubernetes med Docker Hub-image
-
-1. Uppdatera image-raden i [k8s/app.yaml](/c:/Users/joaok/Desktop/YH%20Akademin%20-%20Cloud%20Native%20Computing/inl%C3%A4mningsuppgift%202/k8s/app.yaml) till din Docker Hub-image, till exempel `ditt-dockerhub-namn/rps-cloud-native:latest`.
-2. Justera losenorden i [k8s/mysql-secret.yaml](/c:/Users/joaok/Desktop/YH%20Akademin%20-%20Cloud%20Native%20Computing/inl%C3%A4mningsuppgift%202/k8s/mysql-secret.yaml).
-3. Deploya manifesten:
+## Deploy-kommandon
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
@@ -125,13 +125,13 @@ kubectl apply -f k8s/mysql.yaml
 kubectl apply -f k8s/app.yaml
 ```
 
-4. Exponera tjansten lokalt for test:
+Exponera tjansten lokalt for test:
 
 ```bash
 kubectl -n rps port-forward svc/rps-api 8000:8000
 ```
 
-5. Oppna `http://localhost:8000`.
+Oppna `http://localhost:8000`.
 
 ## Inlamning
 

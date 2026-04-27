@@ -28,8 +28,8 @@ spec:
                   key: MYSQL_ROOT_PASSWORD
       containers:
         - name: rps-api
-          image: rps-api:latest
-          imagePullPolicy: IfNotPresent
+          image: keseljoa/rps-cloud-native:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           env:
