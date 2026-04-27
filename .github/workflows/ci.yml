@@ -9,7 +9,9 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
+  PYTHONPATH: ${{ github.workspace }}
   LOCAL_IMAGE: rps-api:ci
+  DOCKERHUB_REPOSITORY: rps-cloud-native
 
 jobs:
   compile:
@@ -55,7 +57,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run unit tests
-        run: pytest
+        run: python -m pytest
 
   container-build:
     name: Build container
@@ -89,7 +91,7 @@ jobs:
       - name: Check Docker Hub configuration
         id: dockerhub
         run: |
-          if [ -n "${{ vars.IMAGE_NAME }}" ] && [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
@@ -97,7 +99,7 @@ jobs:
 
       - name: Skip push until Docker Hub settings exist
         if: steps.dockerhub.outputs.ready != 'true'
-        run: echo "Set IMAGE_NAME, DOCKERHUB_USERNAME and DOCKERHUB_TOKEN to enable Docker Hub push."
+        run: echo "Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repository secrets to enable Docker Hub push."
 
       - name: Set up Docker Buildx
         if: steps.dockerhub.outputs.ready == 'true'
@@ -117,5 +119,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ vars.IMAGE_NAME }}:latest
-            ${{ vars.IMAGE_NAME }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}

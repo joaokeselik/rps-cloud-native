@@ -64,7 +64,13 @@ For att Docker Hub-pushen ska aktiveras behover du lagga in foljande i GitHub:
 
 - repository secret `DOCKERHUB_USERNAME`
 - repository secret `DOCKERHUB_TOKEN`
-- repository variable `IMAGE_NAME`, till exempel `ditt-dockerhub-namn/rps-api`
+
+CI pushar imagen till:
+
+```text
+DOCKERHUB_USERNAME/rps-cloud-native:latest
+DOCKERHUB_USERNAME/rps-cloud-native:<commit-sha>
+```
 
 ## Kora i Kubernetes lokalt
 
@@ -99,7 +105,7 @@ kind load docker-image rps-api:latest
 
 ## Deploy till Kubernetes med Docker Hub-image
 
-1. Uppdatera image-raden i [k8s/app.yaml](/c:/Users/joaok/Desktop/YH%20Akademin%20-%20Cloud%20Native%20Computing/inl%C3%A4mningsuppgift%202/k8s/app.yaml) till samma image som `IMAGE_NAME`, till exempel `ditt-dockerhub-namn/rps-api:latest`.
+1. Uppdatera image-raden i [k8s/app.yaml](/c:/Users/joaok/Desktop/YH%20Akademin%20-%20Cloud%20Native%20Computing/inl%C3%A4mningsuppgift%202/k8s/app.yaml) till din Docker Hub-image, till exempel `ditt-dockerhub-namn/rps-cloud-native:latest`.
 2. Justera losenorden i [k8s/mysql-secret.yaml](/c:/Users/joaok/Desktop/YH%20Akademin%20-%20Cloud%20Native%20Computing/inl%C3%A4mningsuppgift%202/k8s/mysql-secret.yaml).
 3. Deploya manifesten:
 
