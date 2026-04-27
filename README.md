@@ -103,6 +103,14 @@ Om du anvander kind laddar du in imagen i klustret efter bygg:
 kind load docker-image rps-api:latest
 ```
 
+Om Docker Desktop visar cluster type `kind` men kommandot `kind` inte finns i PowerShell kan du hoppa over `kind load` och fortsatta med `kubectl apply`. Kontrollera sedan att poddarna ar redo innan port-forward:
+
+```bash
+kubectl -n rps get pods
+kubectl -n rps rollout status deployment/mysql
+kubectl -n rps rollout status deployment/rps-api
+```
+
 ## Deploy till Kubernetes med Docker Hub-image
 
 1. Uppdatera image-raden i [k8s/app.yaml](/c:/Users/joaok/Desktop/YH%20Akademin%20-%20Cloud%20Native%20Computing/inl%C3%A4mningsuppgift%202/k8s/app.yaml) till din Docker Hub-image, till exempel `ditt-dockerhub-namn/rps-cloud-native:latest`.

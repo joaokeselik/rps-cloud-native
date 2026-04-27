@@ -13,6 +13,19 @@ spec:
       labels:
         app: rps-api
     spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: mysql:8.4
+          command:
+            - sh
+            - -c
+            - until mysqladmin ping -h mysql -uroot -p"$MYSQL_ROOT_PASSWORD"; do echo waiting for mysql; sleep 2; done
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
       containers:
         - name: rps-api
           image: rps-api:latest
@@ -26,7 +39,7 @@ spec:
                   name: mysql-secret
                   key: DATABASE_URL
             - name: DB_STARTUP_RETRIES
-              value: "20"
+              value: "60"
             - name: DB_STARTUP_DELAY
               value: "3"
           readinessProbe:

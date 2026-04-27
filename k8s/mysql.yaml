@@ -5,6 +5,8 @@ metadata:
   namespace: rps
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mysql
@@ -39,6 +41,16 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: MYSQL_ROOT_PASSWORD
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD"
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
@@ -58,4 +70,3 @@ spec:
   ports:
     - port: 3306
       targetPort: 3306
-
