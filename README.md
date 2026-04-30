@@ -246,11 +246,3 @@ kubectl -n rps create job --from=cronjob/postgres-s3-backup postgres-s3-backup-m
 kubectl -n rps logs job/postgres-s3-backup-manual
 ```
 
-## Submission
-
-For submission, you normally need:
-
-- the URL to your GitHub repository
-- the project report in `docs/report.md`, updated with your own name, screenshots, and repository links
-
-This repository contains the G and VG parts: frontend, two services, two databases, CI, Docker Hub publishing, Kubernetes deployment, and S3 backup setup.
