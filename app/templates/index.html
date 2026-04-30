@@ -93,6 +93,12 @@
             transform: translateY(-1px);
         }
 
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+            transform: none;
+        }
+
         input, select {
             width: 100%;
             border: 1px solid var(--line);
@@ -201,11 +207,11 @@
             <p class="status" id="selected-player">No player selected.</p>
 
             <div class="choices">
-                <button class="primary" onclick="play('rock')">Rock</button>
-                <button class="primary" onclick="play('paper')">Paper</button>
-                <button class="primary" onclick="play('scissors')">Scissors</button>
-                <button class="secondary" onclick="loadDashboard()">Refresh Stats</button>
-                <button class="secondary" onclick="clearSelectedPlayer()">Clear Player</button>
+                <button type="button" class="primary" onclick="play('rock')">Rock</button>
+                <button type="button" class="primary" onclick="play('paper')">Paper</button>
+                <button type="button" class="primary" onclick="play('scissors')">Scissors</button>
+                <button type="button" class="secondary" onclick="loadDashboard()">Refresh Stats</button>
+                <button type="button" class="secondary" id="clear-player" onclick="clearSelectedPlayer()">Clear Player</button>
             </div>
 
             <div class="result" id="result">
@@ -262,7 +268,7 @@
                     Rating
                     <input id="player-rating" type="number" min="0" max="3000" value="1000">
                 </label>
-                <button class="secondary" onclick="createPlayer()">Save Player</button>
+                <button type="button" class="secondary" onclick="createPlayer()">Save Player</button>
             </div>
 
             <p class="status" id="players-status"></p>
@@ -402,12 +408,14 @@
         function clearSelectedPlayer() {
             selectedPlayer = null;
             renderSelectedPlayer();
+            document.getElementById("players-status").textContent = "Player selection cleared. New games will be saved as Guest.";
         }
 
         function renderSelectedPlayer() {
             document.getElementById("selected-player").textContent = selectedPlayer
                 ? `Playing as ${selectedPlayer.name}.`
                 : "No player selected.";
+            document.getElementById("clear-player").disabled = !selectedPlayer;
         }
 
         async function loadPlayers() {
@@ -431,8 +439,8 @@
                     <li>
                         <span>${escapeHtml(player.name)} | ${player.favorite_move} | ${player.rating}</span>
                         <span>
-                            <button class="secondary" onclick="selectPlayer(${player.id}, decodeURIComponent('${encodeURIComponent(player.name)}'))">Select</button>
-                            <button class="primary" onclick="deletePlayer(${player.id})">Delete</button>
+                            <button type="button" class="secondary" onclick="selectPlayer(${player.id}, decodeURIComponent('${encodeURIComponent(player.name)}'))">Select</button>
+                            <button type="button" class="primary" onclick="deletePlayer(${player.id})">Delete</button>
                         </span>
                     </li>
                 `).join("");
