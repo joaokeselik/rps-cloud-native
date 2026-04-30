@@ -100,20 +100,29 @@ def create_game_round(payload: GameCreate, db: Session = Depends(get_db)):
 def list_game_rounds(
     limit: int = 10,
     player_id: int | None = None,
+    guest_only: bool = False,
     db: Session = Depends(get_db),
 ):
     query = select(GameRound)
     if player_id is not None:
         query = query.where(GameRound.player_id == player_id)
+    elif guest_only:
+        query = query.where(GameRound.player_id.is_(None))
     query = query.order_by(GameRound.id.desc()).limit(limit)
     return db.scalars(query).all()
 
 
 @app.get("/api/stats", response_model=StatsResponse)
-def get_stats(player_id: int | None = None, db: Session = Depends(get_db)):
+def get_stats(
+    player_id: int | None = None,
+    guest_only: bool = False,
+    db: Session = Depends(get_db),
+):
     base_query = select(func.count(GameRound.id))
     if player_id is not None:
         base_query = base_query.where(GameRound.player_id == player_id)
+    elif guest_only:
+        base_query = base_query.where(GameRound.player_id.is_(None))
 
     total_games = db.scalar(base_query) or 0
     wins = db.scalar(base_query.where(GameRound.outcome == "win")) or 0

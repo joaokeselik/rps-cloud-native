@@ -306,7 +306,7 @@
         async function loadDashboard() {
             const playerQuery = selectedPlayer
                 ? `?player_id=${encodeURIComponent(selectedPlayer.id)}`
-                : "";
+                : "?guest_only=true";
             const [statsResponse, gamesResponse] = await Promise.all([
                 fetch(`/api/stats${playerQuery}`),
                 fetch(`/api/games${playerQuery}`)

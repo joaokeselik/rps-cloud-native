@@ -127,3 +127,28 @@ def test_stats_and_games_can_filter_by_player(monkeypatch):
     }
     assert games_response.status_code == 200
     assert [game["player_id"] for game in games_response.json()] == [1, 1]
+
+
+def test_stats_and_games_can_filter_guest_rounds(monkeypatch):
+    choices = iter(["scissors", "paper"])
+    monkeypatch.setattr(main, "pick_computer_choice", lambda: next(choices))
+
+    client.post("/api/games", json={"player_choice": "rock"})
+    client.post(
+        "/api/games",
+        json={"player_choice": "rock", "player_id": 1, "player_name": "Ada"},
+    )
+
+    stats_response = client.get("/api/stats?guest_only=true")
+    games_response = client.get("/api/games?guest_only=true")
+
+    assert stats_response.status_code == 200
+    assert stats_response.json() == {
+        "total_games": 1,
+        "wins": 1,
+        "losses": 0,
+        "draws": 0,
+        "win_rate": 100.0,
+    }
+    assert games_response.status_code == 200
+    assert [game["player_id"] for game in games_response.json()] == [None]

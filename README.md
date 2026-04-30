@@ -28,8 +28,8 @@ The main application lets users play Rock, Paper, Scissors. Every game round is 
 
 - `GET /` serves the frontend
 - `POST /api/games` plays one round and stores the result, optionally with `player_id` and `player_name`
-- `GET /api/games` returns the latest rounds, optionally filtered with `?player_id=1`
-- `GET /api/stats` returns total statistics, optionally filtered with `?player_id=1`
+- `GET /api/games` returns the latest rounds, optionally filtered with `?player_id=1` or `?guest_only=true`
+- `GET /api/stats` returns total statistics, optionally filtered with `?player_id=1` or `?guest_only=true`
 - `GET /healthz` provides a health check
 
 Example:
