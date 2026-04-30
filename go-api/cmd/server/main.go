@@ -361,7 +361,7 @@ func docs(w http.ResponseWriter, r *http.Request) {
   <section>
     <h2>Example Create Request</h2>
     <pre>{
-  "name": "Ada",
+  "name": "Player One",
   "favorite_move": "rock",
   "rating": 1200
 }</pre>

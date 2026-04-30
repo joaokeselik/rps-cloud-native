@@ -1,0 +1,384 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+4 0 obj
+<< /Length 3269 >>
+stream
+BT
+/F3 21.0 Tf
+1 0 0 1 54.0 786.0 Tm
+(CI to Kubernetes Cluster) Tj
+/F3 15.0 Tf
+1 0 0 1 54.0 738.0 Tm
+(1. Introduction) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 708.0 Tm
+(This project is a cloud native application that meets both the G and VG) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 693.5 Tm
+(requirements. The solution consists of a Python FastAPI service, a Go CRUD) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 679.0 Tm
+(service, a frontend, two databases, CI in GitHub Actions, Docker images in Docker) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 664.5 Tm
+(Hub, manual Kubernetes deployment, and PostgreSQL backups to S3.) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 640.0 Tm
+(The Python service provides a Rock, Paper, Scissors game. Each game round is) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 625.5 Tm
+(stored in MySQL and the API returns total statistics such as total games and win) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 611.0 Tm
+(rate.) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 586.5 Tm
+(The Go service provides an additional CRUD API for player profiles. Player data is) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 572.0 Tm
+(stored in PostgreSQL, which is a different database from the MySQL database used) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 557.5 Tm
+(by the Python service.) Tj
+/F3 15.0 Tf
+1 0 0 1 54.0 525.0 Tm
+(2. Architecture) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 495.0 Tm
+(The system consists of these main parts:) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 470.5 Tm
+(- a FastAPI web service and frontend) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 454.0 Tm
+(- a Go Players CRUD API) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 437.5 Tm
+(- a MySQL database for game rounds) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 421.0 Tm
+(- a PostgreSQL database for player profiles) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 404.5 Tm
+(- a PostgreSQL backup CronJob that uploads dumps to S3) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 388.0 Tm
+(- a CI pipeline in GitHub Actions) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 366.5 Tm
+(The browser loads the frontend from the Python service. The frontend calls the) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 352.0 Tm
+(Python API for game rounds and statistics, and it calls the Go API for player) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 337.5 Tm
+(profile CRUD operations.) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 313.0 Tm
+(flowchart LR) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 300.8 Tm
+(A[User in browser] --> B[FastAPI frontend]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 288.6 Tm
+(B --> C[Python API pod]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 276.4 Tm
+(C --> D[MySQL Service]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 264.2 Tm
+(D --> E[MySQL pod + PVC]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 252.0 Tm
+(B --> F[Go Players API Service]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 239.8 Tm
+(F --> G[Go API pod]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 227.6 Tm
+(G --> H[PostgreSQL Service]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 215.4 Tm
+(H --> I[PostgreSQL pod + PVC]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 203.2 Tm
+(J[PostgreSQL backup CronJob] --> H) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 191.0 Tm
+(J --> K[S3 bucket]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 178.8 Tm
+(L[GitHub Actions] --> M[Docker Hub images]) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 166.6 Tm
+(M --> C) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 154.4 Tm
+(M --> G) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 142.2 Tm
+(M --> J) Tj
+/F3 15.0 Tf
+1 0 0 1 54.0 113.0 Tm
+(3. CI Flow) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 83.0 Tm
+(The project uses GitHub Actions as the CI solution. When code is pushed to the) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 68.5 Tm
+(repository or when a pull request is created, the workflow does the following:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 3418 >>
+stream
+BT
+/F1 10.5 Tf
+1 0 0 1 68.0 786.0 Tm
+(1. checks out the code) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 769.5 Tm
+(2. installs Python and Go) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 753.0 Tm
+(3. installs dependencies) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 736.5 Tm
+(4. compiles Python and Go code) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 720.0 Tm
+(5. runs Python tests with `pytest`) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 703.5 Tm
+(6. runs Go tests with `go test ./...`) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 687.0 Tm
+(7. builds Docker images for the Python API, Go API, and PostgreSQL backup job) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 670.5 Tm
+(8. pushes the images to Docker Hub on pushes to `main` or `master`) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 649.0 Tm
+(The advantage of this flow is that errors are detected early. If compilation or) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 634.5 Tm
+(tests fail, the pipeline stops before new images are published.) Tj
+/F3 15.0 Tf
+1 0 0 1 54.0 602.0 Tm
+(4. Kubernetes Solution) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 572.0 Tm
+(The solution runs in its own rps namespace in Kubernetes. MySQL and PostgreSQL run) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 557.5 Tm
+(as separate deployments with persistent volume claims, so data is preserved) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 543.0 Tm
+(between pod restarts. Each API runs as its own deployment and connects to its) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 528.5 Tm
+(database through an internal Kubernetes service.) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 504.0 Tm
+(The application is deployed manually with kubectl apply -f. This satisfies the) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 489.5 Tm
+(manual deployment requirement while CI still automates test, build, and image) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 475.0 Tm
+(publishing.) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 450.5 Tm
+(Example deployment steps:) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 426.0 Tm
+(kubectl apply -f k8s/namespace.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 413.8 Tm
+(kubectl apply -f k8s/mysql-secret.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 401.6 Tm
+(kubectl apply -f k8s/mysql-pvc.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 389.4 Tm
+(kubectl apply -f k8s/mysql.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 377.2 Tm
+(kubectl apply -f k8s/app.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 365.0 Tm
+(kubectl apply -f k8s/postgres-secret.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 352.8 Tm
+(kubectl apply -f k8s/postgres-pvc.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 340.6 Tm
+(kubectl apply -f k8s/postgres.yaml) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 328.4 Tm
+(kubectl apply -f k8s/players-api.yaml) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 307.2 Tm
+(The services can be reached locally with port-forwarding:) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 282.7 Tm
+(kubectl -n rps port-forward svc/rps-api 8000:8000) Tj
+/F2 8.2 Tf
+1 0 0 1 66.0 270.5 Tm
+(kubectl -n rps port-forward svc/players-api 8080:8080) Tj
+/F3 15.0 Tf
+1 0 0 1 54.0 241.3 Tm
+(5. S3 Backup) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 211.3 Tm
+(The PostgreSQL database is backed up with a Kubernetes CronJob. The backup image) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 196.8 Tm
+(contains pg_dump and the AWS CLI. The CronJob creates a compressed SQL dump and) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 182.3 Tm
+(uploads it to an S3 bucket.) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 157.8 Tm
+(The S3 credentials and bucket name are provided through a Kubernetes secret named) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 143.3 Tm
+(s3-backup-secret. A sample manifest is included in k8s/s3-secret.example.yaml, and) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 128.8 Tm
+(the README also shows a kubectl create secret command.) Tj
+/F3 15.0 Tf
+1 0 0 1 54.0 96.3 Tm
+(6. Technology Choices) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Length 2346 >>
+stream
+BT
+/F1 10.5 Tf
+1 0 0 1 54.0 786.0 Tm
+(Python and FastAPI were chosen for the game service because they are quick to) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 771.5 Tm
+(develop with, easy to test, and provide clear API endpoints. Go was chosen for the) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 757.0 Tm
+(second API because the VG requirements ask for an additional service in the other) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 742.5 Tm
+(language.) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 718.0 Tm
+(MySQL is used by the Python service, and PostgreSQL is used by the Go service to) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 703.5 Tm
+(satisfy the requirement for a different database. Docker packages the services so) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 689.0 Tm
+(they run consistently in CI and Kubernetes.) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 664.5 Tm
+(GitHub Actions was chosen as the CI platform because GitHub is a common) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 650.0 Tm
+(cloud-based source code provider and has built-in support for the workflow) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 635.5 Tm
+(required by the assignment.) Tj
+/F3 15.0 Tf
+1 0 0 1 54.0 603.0 Tm
+(7. Result and Future Improvements) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 573.0 Tm
+(The project meets the requirements by:) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 548.5 Tm
+(- storing source code in a Git repository) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 532.0 Tm
+(- running compilation and tests in CI) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 515.5 Tm
+(- building and pushing Docker images to Docker Hub) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 499.0 Tm
+(- using a Python service with MySQL) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 482.5 Tm
+(- using a Go CRUD service with PostgreSQL) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 466.0 Tm
+(- providing browsable API documentation for the Go service) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 449.5 Tm
+(- including a frontend that consumes both APIs) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 433.0 Tm
+(- deploying to Kubernetes with manual `kubectl` commands) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 416.5 Tm
+(- setting up PostgreSQL backups to S3) Tj
+/F1 10.5 Tf
+1 0 0 1 54.0 395.0 Tm
+(Possible future improvements:) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 370.5 Tm
+(- add ingress for external access) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 354.0 Tm
+(- add a Helm chart for easier packaging) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 337.5 Tm
+(- add separate environments for test and production) Tj
+/F1 10.5 Tf
+1 0 0 1 68.0 321.0 Tm
+(- add integration tests against MySQL and PostgreSQL) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 5 0 R >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 6 0 R >>
+endobj
+10 0 obj
+<< /Type /Pages /Kids [7 0 R 8 0 R 9 0 R] /Count 3 >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 10 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000000153 00000 n 
+0000000228 00000 n 
+0000003549 00000 n 
+0000007019 00000 n 
+0000009417 00000 n 
+0000009564 00000 n 
+0000009711 00000 n 
+0000009858 00000 n 
+0000009928 00000 n 
+trailer
+<< /Size 12 /Root 11 0 R >>
+startxref
+9979
+%%EOF

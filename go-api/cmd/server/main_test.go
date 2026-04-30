@@ -8,11 +8,11 @@ import (
 )
 
 func TestValidatePlayerInput(t *testing.T) {
-	input := playerInput{Name: " Ada ", FavoriteMove: "Rock", Rating: 1200}
+	input := playerInput{Name: " Player One ", FavoriteMove: "Rock", Rating: 1200}
 	if err := validatePlayerInput(&input); err != nil {
 		t.Fatalf("expected input to be valid: %v", err)
 	}
-	if input.Name != "Ada" {
+	if input.Name != "Player One" {
 		t.Fatalf("expected trimmed name, got %q", input.Name)
 	}
 	if input.FavoriteMove != "rock" {
@@ -21,7 +21,7 @@ func TestValidatePlayerInput(t *testing.T) {
 }
 
 func TestValidatePlayerInputRejectsInvalidMove(t *testing.T) {
-	input := playerInput{Name: "Ada", FavoriteMove: "lizard", Rating: 1200}
+	input := playerInput{Name: "Player One", FavoriteMove: "lizard", Rating: 1200}
 	if err := validatePlayerInput(&input); err == nil {
 		t.Fatal("expected invalid favorite move to fail")
 	}

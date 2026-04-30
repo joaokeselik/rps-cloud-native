@@ -1,4 +1,4 @@
-# Report Template: CI to Kubernetes Cluster
+# CI to Kubernetes Cluster
 
 ## 1. Introduction
 
@@ -38,15 +38,6 @@ flowchart LR
     M --> G
     M --> J
 ```
-
-Suggested screenshots to add before final submission:
-
-- screenshot of a successful GitHub Actions run
-- screenshot of Docker Hub images
-- screenshot of Kubernetes pods and services
-- screenshot of the frontend
-- screenshot of the Go API documentation at `/docs`
-- screenshot or log output from a backup job
 
 ## 3. CI Flow
 

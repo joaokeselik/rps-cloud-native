@@ -58,14 +58,14 @@ def test_create_game_round_can_attach_player(monkeypatch):
         json={
             "player_choice": "scissors",
             "player_id": 7,
-            "player_name": "Ada Lovelace",
+            "player_name": "Player One",
         },
     )
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["player_id"] == 7
-    assert payload["player_name"] == "Ada Lovelace"
+    assert payload["player_name"] == "Player One"
     assert payload["outcome"] == "win"
 
 
@@ -103,7 +103,7 @@ def test_stats_and_games_can_filter_by_player(monkeypatch):
 
     client.post(
         "/api/games",
-        json={"player_choice": "rock", "player_id": 1, "player_name": "Ada"},
+        json={"player_choice": "rock", "player_id": 1, "player_name": "Player One"},
     )
     client.post(
         "/api/games",
@@ -111,7 +111,7 @@ def test_stats_and_games_can_filter_by_player(monkeypatch):
     )
     client.post(
         "/api/games",
-        json={"player_choice": "rock", "player_id": 1, "player_name": "Ada"},
+        json={"player_choice": "rock", "player_id": 1, "player_name": "Player One"},
     )
 
     stats_response = client.get("/api/stats?player_id=1")
@@ -136,7 +136,7 @@ def test_stats_and_games_can_filter_guest_rounds(monkeypatch):
     client.post("/api/games", json={"player_choice": "rock"})
     client.post(
         "/api/games",
-        json={"player_choice": "rock", "player_id": 1, "player_name": "Ada"},
+        json={"player_choice": "rock", "player_id": 1, "player_name": "Player One"},
     )
 
     stats_response = client.get("/api/stats?guest_only=true")

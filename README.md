@@ -59,7 +59,7 @@ Example:
 ```bash
 curl -X POST http://localhost:8080/api/players \
   -H "Content-Type: application/json" \
-  -d '{"name":"Ada","favorite_move":"rock","rating":1200}'
+  -d '{"name":"Player One","favorite_move":"rock","rating":1200}'
 ```
 
 ## Run Locally Without Kubernetes
