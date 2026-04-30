@@ -3,6 +3,11 @@ kind: Deployment
 metadata:
   name: players-api
   namespace: rps
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/match-tag: "true"
+    keel.sh/pollSchedule: "@every 2m"
 spec:
   replicas: 1
   selector:

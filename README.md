@@ -10,6 +10,7 @@ This project is a small but complete cloud native solution for the course requir
 - unit tests and compilation in CI
 - Docker images built and pushed to Docker Hub
 - Kubernetes manifests for manual deployment with `kubectl`
+- optional Keel deployment automation for Kubernetes image updates
 - PostgreSQL backup CronJob that uploads backups to S3
 
 The main application lets users play Rock, Paper, Scissors. Every game round is stored in MySQL, and statistics are returned through the Python API. The same frontend also consumes the Go Players API, where player profiles can be created, listed, selected, and deleted. When a player is selected, new game rounds store that player's id and name with the result.
@@ -21,7 +22,7 @@ The main application lets users play Rock, Paper, Scissors. Every game round is 
 - `backup/` contains the PostgreSQL-to-S3 backup image
 - `tests/` contains Python unit tests and API tests
 - `.github/workflows/ci.yml` runs tests, builds images, and pushes them to Docker Hub
-- `k8s/` contains manifests for the namespace, databases, APIs, and backup CronJob
+- `k8s/` contains manifests for the namespace, databases, APIs, Keel, and backup CronJob
 - `docs/report.md` contains the project report template
 
 ## Python API
@@ -126,10 +127,12 @@ kubectl apply -f k8s/postgres-secret.yaml
 kubectl apply -f k8s/postgres-pvc.yaml
 kubectl apply -f k8s/postgres.yaml
 kubectl apply -f k8s/players-api.yaml
+kubectl apply -f k8s/keel.yaml
 kubectl -n rps rollout status deployment/mysql
 kubectl -n rps rollout status deployment/rps-api
 kubectl -n rps rollout status deployment/postgres
 kubectl -n rps rollout status deployment/players-api
+kubectl -n keel rollout status deployment/keel
 ```
 
 Expose both services locally:
@@ -180,6 +183,40 @@ kubectl -n rps port-forward svc/players-api 8080:8080
 ```
 
 Open `http://localhost:8000` and hard refresh the browser with `Ctrl + F5` if the old frontend is still cached.
+
+## Automatic Kubernetes Updates With Keel
+
+Keel is included as an optional Kubernetes automation component. It watches the Docker Hub image tags used by the app deployments and rolls the deployment when the same `latest` tag points to a new image digest.
+
+The app deployments are annotated with:
+
+```yaml
+keel.sh/policy: force
+keel.sh/trigger: poll
+keel.sh/match-tag: "true"
+keel.sh/pollSchedule: "@every 2m"
+```
+
+Deploy Keel:
+
+```bash
+kubectl apply -f k8s/keel.yaml
+kubectl -n keel rollout status deployment/keel --timeout=240s
+kubectl -n keel get pods
+```
+
+After GitHub Actions pushes a new `latest` image to Docker Hub, Keel should notice it within a few minutes and update the matching deployment. You can watch Keel and the app rollout with:
+
+```bash
+kubectl -n keel logs deployment/keel --tail=100 -f
+kubectl -n rps get pods -w
+```
+
+With Keel running, you usually do not need to run `kubectl -n rps rollout restart deployment/rps-api` manually after a successful image push. If you want to disable Keel, remove it with:
+
+```bash
+kubectl delete namespace keel
+```
 
 ## PostgreSQL Backup to S3
 
