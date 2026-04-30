@@ -46,6 +46,27 @@ def test_create_game_round_saves_result(monkeypatch):
     assert payload["player_choice"] == "rock"
     assert payload["computer_choice"] == "scissors"
     assert payload["outcome"] == "win"
+    assert payload["player_id"] is None
+    assert payload["player_name"] is None
+
+
+def test_create_game_round_can_attach_player(monkeypatch):
+    monkeypatch.setattr(main, "pick_computer_choice", lambda: "paper")
+
+    response = client.post(
+        "/api/games",
+        json={
+            "player_choice": "scissors",
+            "player_id": 7,
+            "player_name": "Ada Lovelace",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["player_id"] == 7
+    assert payload["player_name"] == "Ada Lovelace"
+    assert payload["outcome"] == "win"
 
 
 def test_index_page_renders():

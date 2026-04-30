@@ -6,7 +6,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select, func
+from sqlalchemy import inspect, select, func, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -28,6 +28,7 @@ def initialize_database():
     for _ in range(retries):
         try:
             Base.metadata.create_all(bind=engine)
+            ensure_game_round_player_columns()
             return
         except OperationalError as error:
             last_error = error
@@ -35,6 +36,26 @@ def initialize_database():
 
     if last_error is not None:
         raise last_error
+
+
+def ensure_game_round_player_columns():
+    inspector = inspect(engine)
+    if "game_rounds" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("game_rounds")}
+    statements = []
+    if "player_id" not in existing_columns:
+        statements.append("ALTER TABLE game_rounds ADD COLUMN player_id INTEGER NULL")
+    if "player_name" not in existing_columns:
+        statements.append("ALTER TABLE game_rounds ADD COLUMN player_name VARCHAR(120) NULL")
+
+    if not statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
 
 
 @asynccontextmanager
@@ -62,6 +83,8 @@ def create_game_round(payload: GameCreate, db: Session = Depends(get_db)):
     outcome = determine_outcome(payload.player_choice, computer_choice)
 
     game_round = GameRound(
+        player_id=payload.player_id,
+        player_name=payload.player_name.strip() if payload.player_name else None,
         player_choice=payload.player_choice,
         computer_choice=computer_choice,
         outcome=outcome,

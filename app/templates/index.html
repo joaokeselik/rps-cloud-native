@@ -198,12 +198,14 @@
             <span class="tag">Cloud Native</span>
             <h1>Rock, Paper, Scissors</h1>
             <p>Play a round, store the result in the database, and view statistics directly from the API.</p>
+            <p class="status" id="selected-player">No player selected.</p>
 
             <div class="choices">
                 <button class="primary" onclick="play('rock')">Rock</button>
                 <button class="primary" onclick="play('paper')">Paper</button>
                 <button class="primary" onclick="play('scissors')">Scissors</button>
                 <button class="secondary" onclick="loadDashboard()">Refresh Stats</button>
+                <button class="secondary" onclick="clearSelectedPlayer()">Clear Player</button>
             </div>
 
             <div class="result" id="result">
@@ -272,17 +274,25 @@
 
     <script>
         const playersApiBase = window.localStorage.getItem("playersApiBase") || "http://localhost:8080";
+        let selectedPlayer = null;
 
         async function play(choice) {
+            const payload = { player_choice: choice };
+            if (selectedPlayer) {
+                payload.player_id = selectedPlayer.id;
+                payload.player_name = selectedPlayer.name;
+            }
+
             const response = await fetch("/api/games", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ player_choice: choice })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
+            const playerText = data.player_name ? `${data.player_name} chose` : "You chose";
             document.getElementById("result").textContent =
-                `You chose ${translate(choice)}. The computer chose ${translate(data.computer_choice)}. Result: ${translateOutcome(data.outcome)}.`;
+                `${playerText} ${translate(choice)}. The computer chose ${translate(data.computer_choice)}. Result: ${translateOutcome(data.outcome)}.`;
 
             await loadDashboard();
         }
@@ -309,7 +319,7 @@
 
             history.innerHTML = games.map((game) => `
                 <li>
-                    <span>You: ${translate(game.player_choice)} | Computer: ${translate(game.computer_choice)}</span>
+                    <span>${escapeHtml(game.player_name || "Guest")}: ${translate(game.player_choice)} | Computer: ${translate(game.computer_choice)}</span>
                     <strong>${translateOutcome(game.outcome)}</strong>
                 </li>
             `).join("");
@@ -353,8 +363,10 @@
                     throw new Error(error.error || "Could not save player");
                 }
 
+                selectedPlayer = await response.json();
                 document.getElementById("player-name").value = "";
-                status.textContent = "Player saved.";
+                status.textContent = "Player saved and selected.";
+                renderSelectedPlayer();
                 await loadPlayers();
             } catch (error) {
                 status.textContent = `Players API unavailable: ${error.message}`;
@@ -370,11 +382,32 @@
                 if (!response.ok) {
                     throw new Error("Could not delete player");
                 }
+                if (selectedPlayer && selectedPlayer.id === id) {
+                    selectedPlayer = null;
+                    renderSelectedPlayer();
+                }
                 status.textContent = "Player deleted.";
                 await loadPlayers();
             } catch (error) {
                 status.textContent = `Players API unavailable: ${error.message}`;
             }
+        }
+
+        function selectPlayer(id, name) {
+            selectedPlayer = { id, name };
+            renderSelectedPlayer();
+            document.getElementById("players-status").textContent = `${name} selected for new games.`;
+        }
+
+        function clearSelectedPlayer() {
+            selectedPlayer = null;
+            renderSelectedPlayer();
+        }
+
+        function renderSelectedPlayer() {
+            document.getElementById("selected-player").textContent = selectedPlayer
+                ? `Playing as ${selectedPlayer.name}.`
+                : "No player selected.";
         }
 
         async function loadPlayers() {
@@ -396,8 +429,11 @@
 
                 playersList.innerHTML = players.map((player) => `
                     <li>
-                        <span>${player.name} | ${player.favorite_move} | ${player.rating}</span>
-                        <button class="primary" onclick="deletePlayer(${player.id})">Delete</button>
+                        <span>${escapeHtml(player.name)} | ${player.favorite_move} | ${player.rating}</span>
+                        <span>
+                            <button class="secondary" onclick="selectPlayer(${player.id}, decodeURIComponent('${encodeURIComponent(player.name)}'))">Select</button>
+                            <button class="primary" onclick="deletePlayer(${player.id})">Delete</button>
+                        </span>
                     </li>
                 `).join("");
                 status.textContent = `Players API: ${playersApiBase}`;
@@ -407,6 +443,16 @@
             }
         }
 
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        renderSelectedPlayer();
         loadDashboard();
         loadPlayers();
     </script>

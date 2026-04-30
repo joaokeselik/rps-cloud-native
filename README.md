@@ -12,7 +12,7 @@ This project is a small but complete cloud native solution for the course requir
 - Kubernetes manifests for manual deployment with `kubectl`
 - PostgreSQL backup CronJob that uploads backups to S3
 
-The main application lets users play Rock, Paper, Scissors. Every game round is stored in MySQL, and statistics are returned through the Python API. The same frontend also consumes the Go Players API, where player profiles can be created, listed, and deleted.
+The main application lets users play Rock, Paper, Scissors. Every game round is stored in MySQL, and statistics are returned through the Python API. The same frontend also consumes the Go Players API, where player profiles can be created, listed, selected, and deleted. When a player is selected, new game rounds store that player's id and name with the result.
 
 ## Architecture
 
@@ -27,7 +27,7 @@ The main application lets users play Rock, Paper, Scissors. Every game round is 
 ## Python API
 
 - `GET /` serves the frontend
-- `POST /api/games` plays one round and stores the result
+- `POST /api/games` plays one round and stores the result, optionally with `player_id` and `player_name`
 - `GET /api/games` returns the latest rounds
 - `GET /api/stats` returns total statistics
 - `GET /healthz` provides a health check
