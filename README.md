@@ -157,6 +157,30 @@ kind load docker-image rps-api:latest
 
 If Docker Desktop shows cluster type `kind` but the `kind` command is not available in PowerShell, you can skip `kind load` and continue with `kubectl apply`.
 
+## Restart Kubernetes After App Changes
+
+After changing the Python API or frontend template, build and push a fresh Docker image, then restart only the `rps-api` deployment:
+
+```bash
+docker build -t keseljoa/rps-cloud-native:latest .
+docker push keseljoa/rps-cloud-native:latest
+kubectl -n rps rollout restart deployment/rps-api
+kubectl -n rps rollout status deployment/rps-api --timeout=240s
+kubectl -n rps get pods -o wide
+```
+
+Start the port-forwards again in two separate terminals:
+
+```bash
+kubectl -n rps port-forward svc/rps-api 8000:8000
+```
+
+```bash
+kubectl -n rps port-forward svc/players-api 8080:8080
+```
+
+Open `http://localhost:8000` and hard refresh the browser with `Ctrl + F5` if the old frontend is still cached.
+
 ## PostgreSQL Backup to S3
 
 The file `k8s/postgres-backup-cronjob.yaml` defines a CronJob that runs every night at 02:00 and uploads a compressed PostgreSQL dump to S3.
