@@ -304,9 +304,12 @@
         }
 
         async function loadDashboard() {
+            const playerQuery = selectedPlayer
+                ? `?player_id=${encodeURIComponent(selectedPlayer.id)}`
+                : "";
             const [statsResponse, gamesResponse] = await Promise.all([
-                fetch("/api/stats"),
-                fetch("/api/games")
+                fetch(`/api/stats${playerQuery}`),
+                fetch(`/api/games${playerQuery}`)
             ]);
 
             const stats = await statsResponse.json();
@@ -373,6 +376,7 @@
                 document.getElementById("player-name").value = "";
                 status.textContent = "Player saved and selected.";
                 renderSelectedPlayer();
+                await loadDashboard();
                 await loadPlayers();
             } catch (error) {
                 status.textContent = `Players API unavailable: ${error.message}`;
@@ -403,12 +407,14 @@
             selectedPlayer = { id, name };
             renderSelectedPlayer();
             document.getElementById("players-status").textContent = `${name} selected for new games.`;
+            loadDashboard();
         }
 
         function clearSelectedPlayer() {
             selectedPlayer = null;
             renderSelectedPlayer();
             document.getElementById("players-status").textContent = "Player selection cleared. New games will be saved as Guest.";
+            loadDashboard();
         }
 
         function renderSelectedPlayer() {

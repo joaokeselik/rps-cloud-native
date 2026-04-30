@@ -97,23 +97,28 @@ def create_game_round(payload: GameCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/api/games", response_model=list[GameRoundResponse])
-def list_game_rounds(limit: int = 10, db: Session = Depends(get_db)):
-    query = select(GameRound).order_by(GameRound.id.desc()).limit(limit)
+def list_game_rounds(
+    limit: int = 10,
+    player_id: int | None = None,
+    db: Session = Depends(get_db),
+):
+    query = select(GameRound)
+    if player_id is not None:
+        query = query.where(GameRound.player_id == player_id)
+    query = query.order_by(GameRound.id.desc()).limit(limit)
     return db.scalars(query).all()
 
 
 @app.get("/api/stats", response_model=StatsResponse)
-def get_stats(db: Session = Depends(get_db)):
-    total_games = db.scalar(select(func.count(GameRound.id))) or 0
-    wins = db.scalar(
-        select(func.count(GameRound.id)).where(GameRound.outcome == "win")
-    ) or 0
-    losses = db.scalar(
-        select(func.count(GameRound.id)).where(GameRound.outcome == "loss")
-    ) or 0
-    draws = db.scalar(
-        select(func.count(GameRound.id)).where(GameRound.outcome == "draw")
-    ) or 0
+def get_stats(player_id: int | None = None, db: Session = Depends(get_db)):
+    base_query = select(func.count(GameRound.id))
+    if player_id is not None:
+        base_query = base_query.where(GameRound.player_id == player_id)
+
+    total_games = db.scalar(base_query) or 0
+    wins = db.scalar(base_query.where(GameRound.outcome == "win")) or 0
+    losses = db.scalar(base_query.where(GameRound.outcome == "loss")) or 0
+    draws = db.scalar(base_query.where(GameRound.outcome == "draw")) or 0
     win_rate = round((wins / total_games) * 100, 1) if total_games else 0.0
 
     return StatsResponse(

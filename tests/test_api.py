@@ -95,3 +95,35 @@ def test_stats_endpoint_returns_aggregated_values(monkeypatch):
         "draws": 1,
         "win_rate": 33.3,
     }
+
+
+def test_stats_and_games_can_filter_by_player(monkeypatch):
+    choices = iter(["scissors", "paper", "scissors"])
+    monkeypatch.setattr(main, "pick_computer_choice", lambda: next(choices))
+
+    client.post(
+        "/api/games",
+        json={"player_choice": "rock", "player_id": 1, "player_name": "Ada"},
+    )
+    client.post(
+        "/api/games",
+        json={"player_choice": "rock", "player_id": 2, "player_name": "Grace"},
+    )
+    client.post(
+        "/api/games",
+        json={"player_choice": "rock", "player_id": 1, "player_name": "Ada"},
+    )
+
+    stats_response = client.get("/api/stats?player_id=1")
+    games_response = client.get("/api/games?player_id=1")
+
+    assert stats_response.status_code == 200
+    assert stats_response.json() == {
+        "total_games": 2,
+        "wins": 2,
+        "losses": 0,
+        "draws": 0,
+        "win_rate": 100.0,
+    }
+    assert games_response.status_code == 200
+    assert [game["player_id"] for game in games_response.json()] == [1, 1]
