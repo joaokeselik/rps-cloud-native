@@ -12,14 +12,16 @@ The Go service provides an additional CRUD API for player profiles. Player data 
 
 The system consists of these main parts:
 
-- a FastAPI web service and frontend
-- a Go Players CRUD API
-- a MySQL database for game rounds
-- a PostgreSQL database for player profiles
-- a PostgreSQL backup CronJob that uploads dumps to S3
-- a CI pipeline in GitHub Actions
+- FastAPI web service and frontend
+- Go Players CRUD API
+- MySQL database for game rounds
+- PostgreSQL database for player profiles
+- PostgreSQL backup CronJob that uploads dumps to S3
+- CI pipeline in GitHub Actions
 
 The browser loads the frontend from the Python service. The frontend calls the Python API for game rounds and statistics, and it calls the Go API for player profile CRUD operations.
+
+![Frontend running locally](rps-frontend.png)
 
 ```mermaid
 flowchart LR
